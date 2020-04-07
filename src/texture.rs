@@ -2,6 +2,7 @@ use crate::error::Error;
 
 use gl::types::*;
 use std::os::raw::c_void;
+use std::vec::Vec;
 
 #[derive(Copy, Clone)]
 pub enum Coord {
@@ -83,7 +84,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn make(buf: &[u8], width: usize, height: usize, mipmaps: bool) -> Result<Texture, Error> {
+    pub fn make(buf: &Vec::<u8>, width: usize, height: usize, mipmaps: bool) -> Result<Texture, Error> {
         let mut handle = 0 as GLuint;
         let total_size = width * height * 4;
 
