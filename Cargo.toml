@@ -1,0 +1,12 @@
+[package]
+name = "gl-toolkit"
+version = "0.1.0"
+authors = ["travistrue2008 <travis.true08@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gl = "0.10.0"
+lazy_static = "1.4.0"
+vex = "1.0.2"
