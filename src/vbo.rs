@@ -1,3 +1,5 @@
+use crate::vertex::Vertex;
+
 use gl::types::*;
 use std::mem;
 use std::os::raw::c_void;
@@ -53,7 +55,7 @@ pub struct VBO {
 }
 
 impl VBO {
-    pub fn make<T>(vertices: &Vec<T>, attrs: &Vec<(bool, usize, AttributeKind)>) -> VBO {
+    pub fn make<T: Vertex>(vertices: &Vec<T>) -> VBO {
         let stride = mem::size_of::<T>() as GLsizei;
         let total_size = (vertices.len() * stride as usize) as GLsizeiptr;
         let root_ptr = &vertices[0] as *const T as *const c_void;
@@ -70,7 +72,7 @@ impl VBO {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(gl::ARRAY_BUFFER, total_size, root_ptr, gl::STATIC_DRAW);
 
-            for (i, attr) in attrs.iter().enumerate() {
+            for (i, attr) in T::attrs().iter().enumerate() {
                 let offset_ptr = offset as *const c_void;
                 let normalized = match attr.0 {
                     false => gl::FALSE,
