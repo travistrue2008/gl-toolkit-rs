@@ -1,10 +1,16 @@
 [package]
-name = "gl-toolkit"
+name = "gl_toolkit"
 version = "0.1.0"
 authors = ["travistrue2008 <travis.true08@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A basic toolkit for OpenGL"
+repository = "https://www.github.com/travistrue2008/gl-toolkit-rs"
+readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "gl_toolkit"
+path = "src/lib.rs"
 
 [dependencies]
 gl = "0.10.0"
