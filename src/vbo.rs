@@ -152,9 +152,6 @@ impl VBO {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, total_size, root_ptr, gl::STATIC_DRAW);
 
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-            gl::BindVertexArray(0);
-
             ibo as GLuint
         }
     }
