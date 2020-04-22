@@ -15,4 +15,4 @@ path = "src/lib.rs"
 [dependencies]
 gl = "0.10.0"
 lazy_static = "1.4.0"
-vex = "1.0.2"
+vex = "2.0.1"
