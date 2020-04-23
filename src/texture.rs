@@ -81,6 +81,8 @@ pub struct Texture {
     t_clamp: ClampMode,
     min_filter: MinFilter,
     mag_filter: MagFilter,
+    width: usize,
+    height: usize,
 }
 
 impl Texture {
@@ -123,6 +125,8 @@ impl Texture {
                 t_clamp: ClampMode::Edge,
                 min_filter: MinFilter::Nearest,
                 mag_filter: MagFilter::Nearest,
+                width,
+                height,
             })
         }
     }
@@ -188,6 +192,14 @@ impl Texture {
         }
 
         self.mag_filter = filter;
+    }
+
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.height
     }
 }
 
