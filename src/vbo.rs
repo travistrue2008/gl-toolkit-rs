@@ -208,9 +208,11 @@ impl VBO {
         let offset = offset as isize * size;
         let total_size = vertices.len()  as isize * size;
         let root_ptr = &vertices[0] as *const T as *const c_void;
+        let raw_kind = kind.to_raw_enum();
 
         unsafe {
-            gl::BufferSubData(kind.to_raw_enum(), offset, total_size, root_ptr);
+            gl::BindBuffer(raw_kind, self.handle);
+            gl::BufferSubData(raw_kind, offset, total_size, root_ptr);
         };
     }
 
