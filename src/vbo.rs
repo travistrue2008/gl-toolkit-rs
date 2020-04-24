@@ -213,6 +213,7 @@ impl VBO {
         println!("offset: {}  total_size: {}", offset, total_size);
 
         unsafe {
+            gl::BindVertexArray(self.handle);
             gl::BindBuffer(raw_kind, self.handle);
             gl::BufferSubData(raw_kind, offset, total_size, root_ptr);
         };
