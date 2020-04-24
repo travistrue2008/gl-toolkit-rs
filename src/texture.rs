@@ -159,7 +159,7 @@ impl Texture {
                 width as GLsizei,
                 height as GLsizei,
                 gl::RGBA as GLenum,
-                gl::RGBA as GLenum,
+                gl::UNSIGNED_BYTE as GLenum,
                 &buf[0] as *const u8 as *const c_void,
             );
         }
