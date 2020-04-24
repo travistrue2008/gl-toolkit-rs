@@ -210,6 +210,8 @@ impl VBO {
         let root_ptr = &vertices[0] as *const T as *const c_void;
         let raw_kind = kind.to_raw_enum();
 
+        println!("offset: {}  total_size: {}", offset, total_size);
+
         unsafe {
             gl::BindBuffer(raw_kind, self.handle);
             gl::BufferSubData(raw_kind, offset, total_size, root_ptr);
