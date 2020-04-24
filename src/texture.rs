@@ -86,11 +86,11 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(width: usize, height: usize) -> Result<Texture> {
+    pub fn new(width: usize, height: usize) -> Texture {
         let total_size = width * height * 4;
         let buf = vec![0u8; total_size];
 
-        Texture::build_texture(&buf, width, height, false)
+        Texture::build_texture(&buf, width, height, false).unwrap()
     }
 
     pub fn make(buf: &Vec::<u8>, width: usize, height: usize, mipmaps: bool) -> Result<Texture> {
