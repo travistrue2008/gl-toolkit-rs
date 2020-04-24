@@ -150,10 +150,8 @@ impl Texture {
     }
 
     pub fn write(&self, buf: &[u8], x: usize, y: usize, width: usize, height: usize) {
-        self.bind(0);
-
         unsafe {
-            gl::TexSubImage2D(
+            gl::TextureSubImage2D(
                 self.handle,
                 0,
                 x as i32,
