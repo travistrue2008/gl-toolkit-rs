@@ -5,7 +5,7 @@ use std::convert::From;
 use std::vec::Vec;
 use vex::Vector2;
 
-pub trait Vertex {
+pub trait Vertex: Sized {
     fn attrs() -> Vec<(bool, usize, AttributeKind)>;
     fn new() -> Self;
 }

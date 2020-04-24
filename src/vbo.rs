@@ -4,6 +4,51 @@ use gl::types::*;
 use std::mem;
 use std::os::raw::c_void;
 
+#[derive(Debug, Copy, Clone)]
+pub enum BufferKind {
+    Vertex,
+    Index,
+}
+
+impl BufferKind {
+    pub fn to_raw_enum(&self) -> GLenum {
+        match self {
+            BufferKind::Vertex => gl::ARRAY_BUFFER,
+            BufferKind::Index => gl::ELEMENT_ARRAY_BUFFER,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum BufferMode {
+    StaticDraw,
+    StaticRead,
+    StaticCopy,
+    DynamicDraw,
+    DynamicRead,
+    DynamicCopy,
+    StreamDraw,
+    StreamRead,
+    StreamCopy,
+}
+
+impl BufferMode {
+    pub fn to_raw_enum(&self) -> GLenum {
+        match self {
+            BufferMode::StaticDraw => gl::STATIC_DRAW,
+            BufferMode::StaticRead => gl::STATIC_READ,
+            BufferMode::StaticCopy => gl::STATIC_COPY,
+            BufferMode::DynamicDraw => gl::DYNAMIC_DRAW,
+            BufferMode::DynamicRead => gl::DYNAMIC_READ,
+            BufferMode::DynamicCopy => gl::DYNAMIC_COPY,
+            BufferMode::StreamDraw => gl::STREAM_DRAW,
+            BufferMode::StreamRead => gl::STREAM_READ,
+            BufferMode::StreamCopy => gl::STREAM_COPY,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub enum AttributeKind {
     Byte,
     Short,
@@ -68,14 +113,15 @@ impl PrimitiveKind {
 }
 
 pub struct VBO {
-    kind: PrimitiveKind,
+    mode: BufferMode,
+    primitive_kind: PrimitiveKind,
     handle: GLuint,
     index_count: usize,
     vertex_count: usize,
 }
 
 impl VBO {
-    pub fn make<T: Vertex>(kind: PrimitiveKind, vertices: &Vec<T>, indices: Option<&Vec<u16>>) -> VBO {
+    pub fn make<T: Vertex>(mode: BufferMode, primitive_kind: PrimitiveKind, vertices: &Vec::<T>, indices: Option<&Vec::<u16>>) -> VBO {
         let mut index_count = 0;
 
         let handle = unsafe {
@@ -87,7 +133,7 @@ impl VBO {
             vao
         };
 
-        VBO::build_vertex_buffer(&vertices);
+        VBO::build_vertex_buffer(mode, &vertices);
 
         if let Some(list) = indices {
             index_count = list.len();
@@ -97,14 +143,15 @@ impl VBO {
         unsafe { gl::BindVertexArray(0) };
 
         VBO {
-            kind,
+            mode,
+            primitive_kind,
             handle,
             index_count,
             vertex_count: vertices.len(),
         }
     }
 
-    fn build_vertex_buffer<T: Vertex>(vertices: &Vec::<T>) -> GLuint {
+    fn build_vertex_buffer<T: Vertex>(mode: BufferMode, vertices: &Vec::<T>) -> GLuint {
         let stride = mem::size_of::<T>() as GLsizei;
         let total_size = (vertices.len() * stride as usize) as GLsizeiptr;
         let root_ptr = &vertices[0] as *const T as *const c_void;
@@ -115,7 +162,7 @@ impl VBO {
 
             gl::GenBuffers(1, &mut vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::BufferData(gl::ARRAY_BUFFER, total_size, root_ptr, gl::STATIC_DRAW);
+            gl::BufferData(gl::ARRAY_BUFFER, total_size, root_ptr, mode.to_raw_enum());
 
             for (i, attr) in T::attrs().iter().enumerate() {
                 let offset_ptr = offset as *const c_void;
@@ -156,8 +203,31 @@ impl VBO {
         }
     }
 
+    fn write<T: Sized>(&self, kind: BufferKind, vertices: &Vec::<T>, offset: usize) {
+        let size = mem::size_of::<T>() as isize;
+        let offset = offset as isize * size;
+        let total_size = vertices.len()  as isize * size;
+        let root_ptr = &vertices[0] as *const T as *const c_void;
+
+        unsafe {
+            gl::BufferSubData(kind.to_raw_enum(), offset, total_size, root_ptr);
+        };
+    }
+
+    pub fn mode(&self) -> BufferMode {
+        self.mode
+    }
+
+    pub fn write_vertices<T: Vertex>(&self, vertices: &Vec::<T>, offset: usize) {
+        self.write(BufferKind::Vertex, vertices, offset);
+    }
+
+    pub fn write_indices<T: Vertex>(&self, indices: &Vec::<u16>, offset: usize) {
+        self.write(BufferKind::Index, indices, offset);
+    }
+
     pub fn draw(&self) {
-        let primitive_kind = self.kind.to_raw_enum();
+        let kind = self.primitive_kind.to_raw_enum();
 
         unsafe {
             gl::BindVertexArray(self.handle);
@@ -165,9 +235,9 @@ impl VBO {
             if self.index_count > 0 {
                 let root_ptr = 0 as *const u16 as *const c_void;
 
-                gl::DrawElements(primitive_kind, self.index_count as i32, gl::UNSIGNED_SHORT, root_ptr);
+                gl::DrawElements(kind, self.index_count as i32, gl::UNSIGNED_SHORT, root_ptr);
             } else {
-                gl::DrawArrays(primitive_kind, 0, self.vertex_count as i32);
+                gl::DrawArrays(kind, 0, self.vertex_count as i32);
             }
 
             gl::BindVertexArray(0);
