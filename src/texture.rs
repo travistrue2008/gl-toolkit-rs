@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Result, Error};
 
 use gl::types::*;
 use std::os::raw::c_void;
@@ -86,7 +86,18 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn make(buf: &Vec::<u8>, width: usize, height: usize, mipmaps: bool) -> Result<Texture, Error> {
+    pub fn new(width: usize, height: usize) -> Result<Texture> {
+        let total_size = width * height * 4;
+        let buf = vec![0u8; total_size];
+
+        Texture::build_texture(&buf, width, height, false)
+    }
+
+    pub fn make(buf: &Vec::<u8>, width: usize, height: usize, mipmaps: bool) -> Result<Texture> {
+        Texture::build_texture(buf, width, height, mipmaps)
+    }
+
+    fn build_texture(buf: &[u8], width: usize, height: usize, mipmaps: bool) -> Result<Texture> {
         let mut handle = 0 as GLuint;
         let total_size = width * height * 4;
 
@@ -117,24 +128,42 @@ impl Texture {
             if mipmaps {
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-
-            Ok(Texture {
-                mipmaps,
-                handle,
-                s_clamp: ClampMode::Edge,
-                t_clamp: ClampMode::Edge,
-                min_filter: MinFilter::Nearest,
-                mag_filter: MagFilter::Nearest,
-                width,
-                height,
-            })
         }
+
+        Ok(Texture {
+            mipmaps,
+            handle,
+            s_clamp: ClampMode::Edge,
+            t_clamp: ClampMode::Edge,
+            min_filter: MinFilter::Nearest,
+            mag_filter: MagFilter::Nearest,
+            width,
+            height,
+        })
     }
 
     pub fn bind(&self, unit: GLenum) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + unit);
             gl::BindTexture(gl::TEXTURE_2D, self.handle);
+        }
+    }
+
+    pub fn write(&self, buf: &[u8], x: usize, y: usize, width: usize, height: usize) {
+        self.bind(0);
+
+        unsafe {
+            gl::TexSubImage2D(
+                self.handle,
+                0,
+                x as i32,
+                y as i32,
+                width as GLsizei,
+                height as GLsizei,
+                gl::RGBA as GLenum,
+                gl::RGBA as GLenum,
+                &buf[0] as *const u8 as *const c_void,
+            );
         }
     }
 
@@ -153,7 +182,7 @@ impl Texture {
         }
     }
 
-    pub fn set_min_filter(&mut self, filter: MinFilter) -> Result<(), Error> {
+    pub fn set_min_filter(&mut self, filter: MinFilter) -> Result<()> {
         self.bind(0);
 
         match filter {
