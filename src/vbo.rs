@@ -116,6 +116,8 @@ pub struct VBO {
     mode: BufferMode,
     primitive_kind: PrimitiveKind,
     handle: GLuint,
+    vbo_handle: GLuint,
+    ibo_handle: GLuint,
     index_count: usize,
     vertex_count: usize,
 }
@@ -123,6 +125,7 @@ pub struct VBO {
 impl VBO {
     pub fn make<T: Vertex>(mode: BufferMode, primitive_kind: PrimitiveKind, vertices: &Vec::<T>, indices: Option<&Vec::<u16>>) -> VBO {
         let mut index_count = 0;
+        let mut ibo_handle = 0;
 
         let handle = unsafe {
             let mut vao = 0;
@@ -133,11 +136,11 @@ impl VBO {
             vao
         };
 
-        VBO::build_vertex_buffer(mode, &vertices);
+        let vbo_handle = VBO::build_vertex_buffer(mode, &vertices);
 
         if let Some(list) = indices {
             index_count = list.len();
-            VBO::build_index_buffer(list);
+            ibo_handle = VBO::build_index_buffer(list);
         }
 
         unsafe { gl::BindVertexArray(0) };
@@ -146,6 +149,8 @@ impl VBO {
             mode,
             primitive_kind,
             handle,
+            vbo_handle,
+            ibo_handle,
             index_count,
             vertex_count: vertices.len(),
         }
@@ -203,16 +208,24 @@ impl VBO {
         }
     }
 
+    fn get_buffer_handle(&self, kind: BufferKind) -> GLuint {
+        match kind {
+            BufferKind::Vertex => self.vbo_handle,
+            BufferKind::Index => self.ibo_handle,
+        }
+    }
+
     fn write<T: Sized>(&self, kind: BufferKind, vertices: &Vec::<T>, offset: usize) {
         let size = mem::size_of::<T>() as isize;
         let offset = offset as isize * size;
         let total_size = vertices.len()  as isize * size;
         let root_ptr = &vertices[0] as *const T as *const c_void;
         let raw_kind = kind.to_raw_enum();
+        let handle = self.get_buffer_handle(kind);
 
         unsafe {
             gl::BindVertexArray(self.handle);
-            gl::BindBuffer(raw_kind, self.handle);
+            gl::BindBuffer(raw_kind, handle);
             gl::BufferSubData(raw_kind, offset, total_size, root_ptr);
         };
     }
