@@ -80,10 +80,10 @@ const SRC_TEXTURE_FRAGMENT: &str = r#"
 
 lazy_static! {
     pub static ref SHADER_BASIC: Shader = Shader::make(&vec![
-            Stage::make(StageKind::Vertex, SRC_BASIC_VERTEX).unwrap(),
-            Stage::make(StageKind::Fragment, SRC_BASIC_FRAGMENT).unwrap(),
-        ])
-        .unwrap();
+        Stage::make(StageKind::Vertex, SRC_BASIC_VERTEX).unwrap(),
+        Stage::make(StageKind::Fragment, SRC_BASIC_FRAGMENT).unwrap(),
+    ])
+    .unwrap();
 
     pub static ref SHADER_COLOR: Shader = Shader::make(&vec![
         Stage::make(StageKind::Vertex, SRC_COLOR_VERTEX).unwrap(),

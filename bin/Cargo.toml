@@ -1,0 +1,12 @@
+[package]
+name = "bin"
+version = "0.1.0"
+authors = ["travistrue2008 <travis.true08@gmail.com>"]
+edition = "2018"
+license = "MIT"
+
+[dependencies]
+lazy_static = "1.4.0"
+vex = "2.0.1"
+
+gl_toolkit = { path = "../" }

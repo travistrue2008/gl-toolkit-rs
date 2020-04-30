@@ -1,9 +1,12 @@
 use crate::{Error, Result};
+use crate::Texture;
 
 use gl::types::*;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
+use std::mem;
 use std::ptr;
 use std::str;
+use vex::Matrix4;
 
 pub enum StageKind {
     Vertex,
@@ -28,10 +31,10 @@ pub struct Stage {
 impl Stage {
     pub fn make(kind: StageKind, src: &str) -> Result<Stage> {
         unsafe {
-            let src_c_str = CString::new(src.as_bytes()).unwrap();
+            let src = CString::new(src.as_bytes()).unwrap();
             let handle: GLuint = gl::CreateShader(kind.get_native());
 
-            gl::ShaderSource(handle, 1, &src_c_str.as_ptr(), ptr::null());
+            gl::ShaderSource(handle, 1, &src.as_ptr(), ptr::null());
             gl::CompileShader(handle);
 
             let mut success = gl::FALSE as GLint;
@@ -95,6 +98,19 @@ impl Shader {
     pub fn bind(&self) {
         unsafe { gl::UseProgram(self.handle) };
     }
+
+    pub fn upload_texture(&self, name: &str, texture: &Texture, unit: GLenum) {
+        texture.bind(unit);
+
+        unsafe {
+            let loc = gl::GetUniformLocation(self.handle, to_native(name));
+
+            gl::Uniform1i(loc, unit as i32);
+        }
+    }
+
+    pub fn upload_mat4(&self) {
+    }
 }
 
 impl Drop for Shader {
@@ -102,4 +118,11 @@ impl Drop for Shader {
         unsafe { gl::DeleteProgram(self.handle) };
         self.handle = 0;
     }
+}
+
+fn to_native(s: &str) -> *const GLchar {
+    let c_str = CString::new(s).unwrap();
+    let result = c_str.as_ptr() as *const GLchar;
+
+    result
 }

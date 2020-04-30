@@ -221,6 +221,10 @@ impl Texture {
         self.mag_filter = filter;
     }
 
+    pub fn handle(&self) -> GLuint {
+        self.handle
+    }
+
     pub fn width(&self) -> usize {
         self.width
     }

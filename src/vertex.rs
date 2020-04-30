@@ -3,7 +3,7 @@ use crate::vbo::AttributeKind;
 
 use std::convert::From;
 use std::vec::Vec;
-use vex::Vector2;
+use vex::{Vector2, Vector3};
 
 pub trait Vertex: Sized {
     fn attrs() -> Vec<(bool, usize, AttributeKind)>;
@@ -85,19 +85,19 @@ impl Vertex for ColorVertex {
 #[repr(C, packed)]
 #[derive(Copy, Clone, Debug)]
 pub struct TextureVertex {
-    pub pos: Vector2,
+    pub pos: Vector3,
     pub coord: Vector2,
 }
 
 impl TextureVertex {
-    pub fn make(x: f32, y: f32, u: f32, v: f32) -> TextureVertex {
+    pub fn make(x: f32, y: f32, z: f32, u: f32, v: f32) -> TextureVertex {
         TextureVertex {
-            pos: Vector2::make(x, y),
+            pos: Vector3::make(x, y, z),
             coord: Vector2::make(u, v),
         }
     }
 
-    pub fn make_from_parts(pos: Vector2, coord: Vector2) -> TextureVertex {
+    pub fn make_from_parts(pos: Vector3, coord: Vector2) -> TextureVertex {
         TextureVertex { pos, coord }
     }
 }
@@ -105,14 +105,14 @@ impl TextureVertex {
 impl Vertex for TextureVertex {
     fn attrs() -> Vec<(bool, usize, AttributeKind)> {
         vec![
-            (false, 2, AttributeKind::Float),
+            (false, 3, AttributeKind::Float),
             (false, 2, AttributeKind::Float),
         ]
     }
 
     fn new() -> TextureVertex {
         TextureVertex {
-            pos: Vector2::new(),
+            pos: Vector3::new(),
             coord: Vector2::new(),
         }
     }

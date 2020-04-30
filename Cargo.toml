@@ -16,3 +16,9 @@ path = "src/lib.rs"
 gl = "0.10.0"
 lazy_static = "1.4.0"
 vex = "2.0.1"
+
+[workspace]
+members = [
+    ".",
+    "bin",
+]
