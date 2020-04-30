@@ -20,5 +20,5 @@ vex = "2.0.1"
 [workspace]
 members = [
     ".",
-    "bin",
+    "cli",
 ]
