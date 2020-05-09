@@ -17,13 +17,13 @@ pub struct BasicVertex {
 }
 
 impl BasicVertex {
-    pub fn make(x: f32, y: f32) -> BasicVertex {
+    pub fn new(x: f32, y: f32) -> BasicVertex {
         BasicVertex {
             pos: Vector2::make(x, y),
         }
     }
 
-    pub fn make_from_parts(pos: Vector2) -> BasicVertex {
+    pub fn from_parts(pos: Vector2) -> BasicVertex {
         BasicVertex { pos }
     }
 }
@@ -49,19 +49,19 @@ impl From<Vector2> for BasicVertex {
 #[repr(C, packed)]
 #[derive(Copy, Clone, Debug)]
 pub struct ColorVertex {
-    pub pos: Vector2,
+    pub pos: Vector3,
     pub color: Color,
 }
 
 impl ColorVertex {
-    pub fn make(x: f32, y: f32, r: u8, g: u8, b: u8, a: u8) -> ColorVertex {
+    pub fn new(x: f32, y: f32, z: f32, r: u8, g: u8, b: u8, a: u8) -> ColorVertex {
         ColorVertex {
-            pos: Vector2::make(x, y),
+            pos: Vector3::make(x, y, z),
             color: Color::make(r, g, b, a),
         }
     }
 
-    pub fn make_from_parts(pos: Vector2, color: Color) -> ColorVertex {
+    pub fn from_parts(pos: Vector3, color: Color) -> ColorVertex {
         ColorVertex { pos, color }
     }
 }
@@ -76,7 +76,7 @@ impl Vertex for ColorVertex {
 
     fn new() -> ColorVertex {
         ColorVertex {
-            pos: Vector2::new(),
+            pos: Vector3::new(),
             color: Color::new(),
         }
     }
@@ -90,14 +90,14 @@ pub struct TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn make(x: f32, y: f32, z: f32, u: f32, v: f32) -> TextureVertex {
+    pub fn new(x: f32, y: f32, z: f32, u: f32, v: f32) -> TextureVertex {
         TextureVertex {
             pos: Vector3::make(x, y, z),
             coord: Vector2::make(u, v),
         }
     }
 
-    pub fn make_from_parts(pos: Vector3, coord: Vector2) -> TextureVertex {
+    pub fn from_parts(pos: Vector3, coord: Vector2) -> TextureVertex {
         TextureVertex { pos, coord }
     }
 }
