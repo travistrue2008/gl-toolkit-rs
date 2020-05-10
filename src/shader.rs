@@ -2,11 +2,19 @@ use crate::{Error, Result};
 use crate::Texture;
 
 use gl::types::*;
-use std::ffi::{CStr, CString};
-use std::mem;
+use lazy_static::lazy_static;
+use std::ffi::CString;
 use std::ptr;
 use std::str;
+use std::sync::Mutex;
 use vex::Matrix4;
+
+fn to_native(s: &str) -> *const GLchar {
+    let c_str = CString::new(s).unwrap();
+    let result = c_str.as_ptr() as *const GLchar;
+
+    result
+}
 
 pub enum StageKind {
     Vertex,
@@ -29,7 +37,7 @@ pub struct Stage {
 }
 
 impl Stage {
-    pub fn make(kind: StageKind, src: &str) -> Result<Stage> {
+    pub fn new(kind: StageKind, src: &str) -> Result<Stage> {
         unsafe {
             let src = CString::new(src.as_bytes()).unwrap();
             let handle: GLuint = gl::CreateShader(kind.get_native());
@@ -68,7 +76,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn make(stages: &Vec<Stage>) -> Result<Shader> {
+    pub fn new(stages: &Vec<Stage>) -> Result<Shader> {
         unsafe {
             let handle = gl::CreateProgram();
             for stage in stages {
@@ -96,7 +104,13 @@ impl Shader {
     }
 
     pub fn bind(&self) {
-        unsafe { gl::UseProgram(self.handle) };
+        let mut st = INTERNAL_STATE.lock().unwrap();
+
+        if st.active_program == self.handle {
+            unsafe { gl::UseProgram(self.handle) };
+
+            st.active_program = self.handle;
+        }
     }
 
     pub fn upload_texture(&self, name: &str, texture: &Texture, unit: GLenum) {
@@ -120,9 +134,18 @@ impl Drop for Shader {
     }
 }
 
-fn to_native(s: &str) -> *const GLchar {
-    let c_str = CString::new(s).unwrap();
-    let result = c_str.as_ptr() as *const GLchar;
+struct State {
+    active_program: GLuint,
+}
 
-    result
+lazy_static! {
+    static ref INTERNAL_STATE: Mutex<State> = {
+        Mutex::new(State {
+            active_program: 0,
+        })
+    };
+}
+
+pub fn init() {
+    unsafe { gl::UseProgram(0) };
 }

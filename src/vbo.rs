@@ -1,5 +1,3 @@
-use crate::vertex::Vertex;
-
 use gl::types::*;
 use std::mem;
 use std::os::raw::c_void;
@@ -112,6 +110,11 @@ impl PrimitiveKind {
     }
 }
 
+pub trait Vertex: Sized {
+    fn attrs() -> Vec<(bool, usize, AttributeKind)>;
+    fn new() -> Self;
+}
+
 pub struct VBO {
     mode: BufferMode,
     primitive_kind: PrimitiveKind,
@@ -123,7 +126,7 @@ pub struct VBO {
 }
 
 impl VBO {
-    pub fn make<T: Vertex>(mode: BufferMode, primitive_kind: PrimitiveKind, vertices: &Vec::<T>, indices: Option<&Vec::<u16>>) -> VBO {
+    pub fn new<T: Vertex>(mode: BufferMode, primitive_kind: PrimitiveKind, vertices: &Vec::<T>, indices: Option<&Vec::<u16>>) -> VBO {
         let mut index_count = 0;
         let mut ibo_handle = 0;
 
@@ -242,7 +245,7 @@ impl VBO {
         self.write(BufferKind::Index, indices, offset);
     }
 
-    pub fn draw(&self) {
+    pub fn render(&self) {
         let kind = self.primitive_kind.to_raw_enum();
 
         unsafe {

@@ -8,11 +8,8 @@ description = "A basic toolkit for OpenGL"
 repository = "https://www.github.com/travistrue2008/gl-toolkit-rs"
 readme = "README.md"
 
-[lib]
-name = "gl_toolkit"
-path = "src/lib.rs"
-
 [dependencies]
+flagset = "0.3.0"
 gl = "0.10.0"
 lazy_static = "1.4.0"
 vex = "2.0.1"
@@ -20,5 +17,8 @@ vex = "2.0.1"
 [workspace]
 members = [
     ".",
-    "bin",
+    "cli",
+]
+default-members = [
+    "cli",
 ]

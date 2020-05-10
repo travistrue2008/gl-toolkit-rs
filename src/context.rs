@@ -8,7 +8,6 @@ use std::fmt;
 use std::fmt::Display;
 use std::os::raw::c_void;
 use std::sync::Mutex;
-use std::vec::Vec;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Feature {
@@ -122,13 +121,6 @@ impl Display for ClearFlag {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-struct TextureUnit {
-    d1_handle: GLuint,
-    d2_handle: GLuint,
-    d3_handle: GLuint,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Viewport {
     x: u32,
@@ -148,64 +140,28 @@ impl Viewport {
     }
 }
 
-impl TextureUnit {
-    fn new() -> TextureUnit {
-
-        TextureUnit {
-            d1_handle: 0,
-            d2_handle: 0,
-            d3_handle: 0,
-        }
-    }
-}
-
 struct State {
     initialized: bool,
-    target_unit: GLuint,
     viewport: Viewport,
     features: HashSet<Feature>,
-    units: Vec::<TextureUnit>,
 }
 
 lazy_static! {
     static ref INTERNAL_STATE: Mutex<State> = {
         Mutex::new(State {
             initialized: false,
-            target_unit: 0,
             viewport: Viewport::new(),
             features: HashSet::new(),
-            units: Vec::new(),
         })
     };
 }
 
-fn init_texture_units() {
-    let mut st = INTERNAL_STATE.lock().unwrap();
-    let max_units = unsafe {
-        let mut count: i32 = 0;
-
-        gl::GetIntegerv(gl::MAX_TEXTURE_IMAGE_UNITS, &mut count);
-
-        for i in 0..count {
-            gl::ActiveTexture(gl::TEXTURE0 + i as GLuint);
-            gl::BindTexture(gl::TEXTURE_1D, 0);
-            gl::BindTexture(gl::TEXTURE_2D, 0);
-            gl::BindTexture(gl::TEXTURE_3D, 0);
-        }
-
-        gl::ActiveTexture(gl::TEXTURE0);
-
-        count as usize
-    };
-
-    st.units = vec![TextureUnit::new(); max_units];
-}
-
 pub fn init<F: FnMut(&'static str) -> *const c_void>(loader: F) -> Result<()> {
-    if INTERNAL_STATE.lock().unwrap().initialized == false {
+    let mut st = INTERNAL_STATE.lock().unwrap();
+
+    if st.initialized == false {
         gl::load_with(loader);
-        init_texture_units();
-        INTERNAL_STATE.lock().unwrap().initialized = true;
+        st.initialized = true;
 
         Ok(())
     } else {
@@ -243,16 +199,6 @@ pub fn clear_color(r: f32, g: f32, b: f32, a: f32) {
 
 pub fn blend_func(src: BlendComponent, dst: BlendComponent) {
     unsafe { gl::BlendFunc(src.get_native(), dst.get_native()) };
-}
-
-pub fn activate_unit(unit: GLuint) {
-    let mut st = INTERNAL_STATE.lock().unwrap();
-
-    if st.target_unit != unit {
-        unsafe { gl::ActiveTexture(gl::TEXTURE0 + unit); };
-
-        st.target_unit = unit;
-    }
 }
 
 pub fn set_viewport(x: u32, y: u32, width: u32, height: u32) {

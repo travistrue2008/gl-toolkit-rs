@@ -1,7 +1,9 @@
 use crate::error::{Result, Error};
 
 use gl::types::*;
+use lazy_static::lazy_static;
 use std::os::raw::c_void;
+use std::sync::Mutex;
 use std::vec::Vec;
 
 #[derive(Copy, Clone)]
@@ -70,6 +72,24 @@ impl MagFilter {
         match self {
             MagFilter::Nearest => gl::NEAREST,
             MagFilter::Linear => gl::LINEAR,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+struct TextureUnit {
+    d1_handle: GLuint,
+    d2_handle: GLuint,
+    d3_handle: GLuint,
+}
+
+impl TextureUnit {
+    fn new() -> TextureUnit {
+
+        TextureUnit {
+            d1_handle: 0,
+            d2_handle: 0,
+            d3_handle: 0,
         }
     }
 }
@@ -143,9 +163,18 @@ impl Texture {
     }
 
     pub fn bind(&self, unit: GLenum) {
+        let mut st = INTERNAL_STATE.lock().unwrap();
+
         unsafe {
-            gl::ActiveTexture(gl::TEXTURE0 + unit);
-            gl::BindTexture(gl::TEXTURE_2D, self.handle);
+            if st.active_unit != unit {
+                gl::ActiveTexture(gl::TEXTURE0 + unit);
+
+                st.active_unit = unit;
+            }
+
+            if st.active_unit().d2_handle == self.handle {
+                gl::BindTexture(gl::TEXTURE_2D, self.handle);
+            }
         }
     }
 
@@ -239,4 +268,46 @@ impl Drop for Texture {
         unsafe { gl::DeleteTextures(1, &self.handle) };
         self.handle = 0;
     }
+}
+
+struct State {
+    active_unit: GLuint,
+    units: Vec::<TextureUnit>,
+}
+
+impl State {
+    fn active_unit(&self) -> TextureUnit {
+        self.units[self.active_unit as usize]
+    }
+}
+
+lazy_static! {
+    static ref INTERNAL_STATE: Mutex<State> = {
+        Mutex::new(State {
+            active_unit: 0,
+            units: Vec::new(),
+        })
+    };
+}
+
+pub fn init() {
+    let mut st = INTERNAL_STATE.lock().unwrap();
+    let max_units = unsafe {
+        let mut count: i32 = 0;
+
+        gl::GetIntegerv(gl::MAX_TEXTURE_IMAGE_UNITS, &mut count);
+
+        for i in 0..count {
+            gl::ActiveTexture(gl::TEXTURE0 + i as GLuint);
+            gl::BindTexture(gl::TEXTURE_1D, 0);
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+            gl::BindTexture(gl::TEXTURE_3D, 0);
+        }
+
+        gl::ActiveTexture(gl::TEXTURE0);
+
+        count as usize
+    };
+
+    st.units = vec![TextureUnit::new(); max_units];
 }
