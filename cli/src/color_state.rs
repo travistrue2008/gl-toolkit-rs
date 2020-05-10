@@ -19,13 +19,13 @@ lazy_static! {
     ];
 }
 
-pub struct SpriteState {
+pub struct ColorState {
     vbo: VBO,
 }
 
-impl State for SpriteState {
-    fn new() -> SpriteState {
-        SpriteState {
+impl ColorState {
+    pub fn new() -> ColorState {
+        ColorState {
             vbo: VBO::new(
                 BufferMode::StaticDraw,
                 PrimitiveKind::TriangleFan,
@@ -34,7 +34,9 @@ impl State for SpriteState {
             ),
         }
     }
+}
 
+impl State for ColorState {
     fn key_up(&self) {
     }
 

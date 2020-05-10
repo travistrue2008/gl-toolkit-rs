@@ -7,16 +7,16 @@ use std::sync::Mutex;
 use std::vec::Vec;
 
 #[derive(Copy, Clone)]
-pub enum Coord {
+pub enum WrapCoord {
     S,
     T,
 }
 
-impl Coord {
+impl WrapCoord {
     pub fn get_native(&self) -> GLenum {
         match self {
-            Coord::S => gl::TEXTURE_WRAP_S,
-            Coord::T => gl::TEXTURE_WRAP_T,
+            WrapCoord::S => gl::TEXTURE_WRAP_S,
+            WrapCoord::T => gl::TEXTURE_WRAP_T,
         }
     }
 }
@@ -194,18 +194,16 @@ impl Texture {
         }
     }
 
-    pub fn set_clamp(&mut self, coord: Coord, mode: ClampMode) {
+    pub fn set_clamp(&mut self, coord: WrapCoord, mode: ClampMode) {
         self.bind(0);
 
         unsafe {
-            let raw_coord = coord as u32;
-
-            gl::TexParameteri(gl::TEXTURE_2D, raw_coord, mode as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, coord.get_native(), mode.get_native() as i32);
         }
 
         match coord {
-            Coord::S => self.s_clamp = mode,
-            Coord::T => self.t_clamp = mode,
+            WrapCoord::S => self.s_clamp = mode,
+            WrapCoord::T => self.t_clamp = mode,
         }
     }
 

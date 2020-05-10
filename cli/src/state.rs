@@ -1,8 +1,6 @@
 use gl_toolkit::ClearFlag;
 
-pub trait State: Sized {
-    fn new() -> Self;
-
+pub trait State {
     fn key_up(&self);
     fn key_down(&self);
     fn resize(&self, width: u32, height: u32);
@@ -10,19 +8,19 @@ pub trait State: Sized {
     fn render(&self);
 }
 
-pub struct FiniteStateMachine<S: State> {
-    states: Vec<S>,
+pub struct FiniteStateMachine {
+    states: Vec<Box<State>>,
 }
 
-impl<S: State> FiniteStateMachine<S> {
-    pub fn new() -> FiniteStateMachine<S> {
+impl FiniteStateMachine {
+    pub fn new() -> FiniteStateMachine {
         FiniteStateMachine {
             states: Vec::new(),
         }
     }
 
-    pub fn push(&mut self, state: S) {
-        self.states.push(state);
+    pub fn push<S: State + 'static>(&mut self, state: S) {
+        self.states.push(Box::new(state));
     }
 
     pub fn pop(&mut self) {

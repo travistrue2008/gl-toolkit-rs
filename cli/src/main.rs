@@ -1,8 +1,10 @@
 mod state;
-mod sprite_state;
+mod color_state;
+mod texture_state;
 
 use crate::state::{State, FiniteStateMachine};
-use crate::sprite_state::SpriteState;
+use crate::color_state::ColorState;
+use crate::texture_state::TextureState;
 
 use gl_toolkit::Feature;
 use glfw::SwapInterval;
@@ -91,7 +93,8 @@ fn main() {
 
     let start_time = Instant::now();
     let mut fsm = FiniteStateMachine::new();
-    fsm.push(SpriteState::new());
+    fsm.push(ColorState::new());
+    fsm.push(TextureState::new());
 
     let win_size = window.get_size();
 
