@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 flagset = "0.3.0"
-gl = "0.10.0"
+gl = "0.14.0"
 lazy_static = "1.4.0"
 vex = "2.0.1"
 

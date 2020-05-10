@@ -1,4 +1,6 @@
-use crate::{Result, Error};
+use crate::Result;
+use crate::Error;
+use crate::Color;
 
 use flagset::{FlagSet, flags};
 use gl::types::*;
@@ -6,7 +8,6 @@ use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::fmt;
 use std::fmt::Display;
-use std::os::raw::c_void;
 use std::sync::Mutex;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -66,7 +67,22 @@ impl Feature {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum FrontFace {
+    Clockwise,
+    CounterClockwise,
+}
+
+impl FrontFace {
+    fn get_native(&self) -> GLenum {
+        match self {
+            FrontFace::Clockwise => gl::CW,
+            FrontFace::CounterClockwise => gl::CCW,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BlendComponent {
     Zero,
     One,
@@ -142,6 +158,10 @@ impl Viewport {
 
 struct State {
     initialized: bool,
+    front: FrontFace,
+    blend_src: BlendComponent,
+    blend_dst: BlendComponent,
+    clear_color: Color,
     viewport: Viewport,
     features: HashSet<Feature>,
 }
@@ -150,18 +170,27 @@ lazy_static! {
     static ref INTERNAL_STATE: Mutex<State> = {
         Mutex::new(State {
             initialized: false,
+            front: FrontFace::CounterClockwise,
+            blend_src: BlendComponent::SrcAlpha,
+            blend_dst: BlendComponent::OneMinusSrcAlpha,
+            clear_color: Color::make(0, 0, 0, 0),
             viewport: Viewport::new(),
             features: HashSet::new(),
         })
     };
 }
 
-pub fn init<F: FnMut(&'static str) -> *const c_void>(loader: F) -> Result<()> {
+pub fn init() -> Result<()> {
     let mut st = INTERNAL_STATE.lock().unwrap();
 
     if st.initialized == false {
-        gl::load_with(loader);
         st.initialized = true;
+
+        unsafe {
+            gl::FrontFace(gl::CCW);
+            gl::Viewport(0, 0, 0, 0);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
 
         Ok(())
     } else {
@@ -193,12 +222,44 @@ pub fn clear(flags: FlagSet<ClearFlag>) {
     unsafe { gl::Clear(flags.bits()) };
 }
 
-pub fn clear_color(r: f32, g: f32, b: f32, a: f32) {
-    unsafe { gl::ClearColor(r, g, b, a) };
+pub fn set_clear_color(r: f32, g: f32, b: f32, a: f32) {
+    let mut st = INTERNAL_STATE.lock().unwrap();
+    let sr = st.clear_color.r as f32 / 255.0;
+    let sg = st.clear_color.g as f32 / 255.0;
+    let sb = st.clear_color.b as f32 / 255.0;
+    let sa = st.clear_color.a as f32 / 255.0;
+
+    if sr != r || sg != g || sb != b || sa != a {
+        unsafe { gl::ClearColor(r, g, b, a) };
+
+        st.clear_color = Color::make(
+            (r * 255.0) as u8,
+            (g * 255.0) as u8,
+            (b * 255.0) as u8,
+            (a * 255.0) as u8,
+        );
+    }
 }
 
-pub fn blend_func(src: BlendComponent, dst: BlendComponent) {
-    unsafe { gl::BlendFunc(src.get_native(), dst.get_native()) };
+pub fn set_front_face(target: FrontFace) {
+    let mut st = INTERNAL_STATE.lock().unwrap();
+
+    if st.front != target {
+        unsafe { gl::FrontFace(target.get_native()) };
+
+        st.front = target;
+    }
+}
+
+pub fn set_blend_func(src: BlendComponent, dst: BlendComponent) {
+    let mut st = INTERNAL_STATE.lock().unwrap();
+
+    if st.blend_src != src || st.blend_dst != dst {
+        unsafe { gl::BlendFunc(src.get_native(), dst.get_native()) };
+
+        st.blend_src = src;
+        st.blend_dst = dst;
+    }
 }
 
 pub fn set_viewport(x: u32, y: u32, width: u32, height: u32) {

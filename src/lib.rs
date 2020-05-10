@@ -14,10 +14,8 @@ pub use shader::*;
 pub use texture::*;
 pub use vbo::*;
 
-use std::os::raw::c_void;
-
-pub fn init<F: FnMut(&'static str) -> *const c_void>(loader: F) -> Result<()> {
-    context::init(loader)?;
+pub fn init() -> Result<()> {
+    context::init()?;
     texture::init();
     shader::init();
 

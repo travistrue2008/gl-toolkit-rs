@@ -6,6 +6,7 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
+gl = "0.14.0"
 glfw = "0.37.0"
 lazy_static = "1.4.0"
 vex = "2.0.1"

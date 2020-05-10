@@ -4,7 +4,8 @@ mod sprite_state;
 use crate::state::{State, FiniteStateMachine};
 use crate::sprite_state::SpriteState;
 
-use gl_toolkit::{Feature, BlendComponent, ClearFlag};
+use gl_toolkit::Feature;
+use glfw::SwapInterval;
 use lazy_static::lazy_static;
 use std::cell::Cell;
 use std::sync::mpsc::Receiver;
@@ -32,6 +33,7 @@ fn init_glfw() -> Glfw {
 		data: Cell::new(0),
     })).unwrap();
 
+    glfw.set_swap_interval(SwapInterval::Sync(1));
     glfw.window_hint(WindowHint::ContextVersion(4, 1));
     glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
     glfw.window_hint(WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
@@ -54,10 +56,11 @@ fn init_window(glfw: &Glfw) -> (Window, Receiver<(f64, WindowEvent)>) {
 fn init_gl(window: &mut Window) {
     let loader = |symbol| window.get_proc_address(symbol) as *const _;
 
-    gl_toolkit::init(loader).unwrap();
+    gl::load_with(loader);
+    gl_toolkit::init().unwrap();
+    gl_toolkit::set_clear_color(0.2, 0.3, 0.3, 1.0);
+    gl_toolkit::enable(Feature::CullFace);
     gl_toolkit::enable(Feature::Blend);
-    gl_toolkit::clear_color(0.2, 0.3, 0.3, 1.0);
-    gl_toolkit::blend_func(BlendComponent::OneMinusSrcAlpha, BlendComponent::SrcAlpha);
 }
 
 fn error_callback(_: glfw::Error, description: String, error_count: &Cell<usize>) {
@@ -90,6 +93,9 @@ fn main() {
     let mut fsm = FiniteStateMachine::new();
     fsm.push(SpriteState::new());
 
+    let win_size = window.get_size();
+
+    gl_toolkit::set_viewport(0, 0, win_size.0 as u32, win_size.1 as u32);
     while !window.should_close() {
         let elapsed_time = start_time.elapsed().as_secs_f32();
 
