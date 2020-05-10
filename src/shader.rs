@@ -39,19 +39,18 @@ pub struct Stage {
 impl Stage {
     pub fn new(kind: StageKind, src: &str) -> Result<Stage> {
         unsafe {
+            let mut success = gl::FALSE as GLint;
             let src = CString::new(src.as_bytes()).unwrap();
             let handle: GLuint = gl::CreateShader(kind.get_native());
 
             gl::ShaderSource(handle, 1, &src.as_ptr(), ptr::null());
             gl::CompileShader(handle);
-
-            let mut success = gl::FALSE as GLint;
-            let mut log = Vec::with_capacity(512);
-
-            log.set_len(511);
             gl::GetShaderiv(handle, gl::COMPILE_STATUS, &mut success);
 
             if success != gl::TRUE as GLint {
+                let mut log = Vec::with_capacity(512);
+                log.set_len(511);
+
                 let log_ptr = log.as_mut_ptr() as *mut GLchar;
                 gl::GetShaderInfoLog(handle, 512, ptr::null_mut(), log_ptr);
 
@@ -106,7 +105,7 @@ impl Shader {
     pub fn bind(&self) {
         let mut st = INTERNAL_STATE.lock().unwrap();
 
-        if st.active_program == self.handle {
+        if st.active_program != self.handle {
             unsafe { gl::UseProgram(self.handle) };
 
             st.active_program = self.handle;
