@@ -11,12 +11,11 @@ use gl_toolkit::{
 };
 
 lazy_static! {
-    static ref INDICES: Vec<u16> = vec![0, 1, 2, 0, 2, 3];
     static ref VERTICES: Vec<ColorVertex> = vec![
-        ColorVertex::new(32.0,  0.0, 0.0, 255,   0,   0, 255),
-        ColorVertex::new( 0.0,  0.0, 0.0,   0, 255,   0, 255),
-        ColorVertex::new( 0.0, 32.0, 0.0,   0,   0, 255, 255),
-        ColorVertex::new(32.0, 32.0, 0.0,   0,   0,   0, 255),
+        ColorVertex::new( 1.0,  1.0, 0.0, 255,   0,   0, 255),
+        ColorVertex::new(-1.0,  1.0, 0.0,   0, 255,   0, 255),
+        ColorVertex::new(-1.0, -1.0, 0.0,   0,   0, 255, 255),
+        ColorVertex::new( 1.0, -1.0, 0.0,   0,   0,   0, 255),
     ];
 }
 
@@ -29,9 +28,9 @@ impl State for SpriteState {
         SpriteState {
             vbo: VBO::new(
                 BufferMode::StaticDraw,
-                PrimitiveKind::Triangles,
+                PrimitiveKind::TriangleFan,
                 &VERTICES,
-                Some(&INDICES),
+                None,
             ),
         }
     }
@@ -51,7 +50,6 @@ impl State for SpriteState {
     fn render(&self) {
         SHADER_COLOR.bind();
 
-        gl_toolkit::set_viewport(0, 0, 1, 1);
         self.vbo.render();
     }
 }
